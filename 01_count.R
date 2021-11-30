@@ -1,7 +1,14 @@
 library(tidyverse)
 
 PMID <- jsonlite::read_json('data/pmids_for_drugs.json') %>%
-    map(unlist) %>% enframe(name='agent', value='pmids')
+    keep(~length(.x) > 0) %>%
+    modify_depth(2, modify_if, is.null, ~as.integer(NA)) %>%
+    modify_depth(2, as_tibble) %>%
+    map(enframe, "PMID") %>% map(unnest, value) %>%
+    enframe("Drug") %>% unnest(value) %>%
+    select(Drug, PMID, Year=year, nCite = citation_count,
+           PubChem = pubchem_support, MeSH = mesh_support,
+           Grounding = grounding_support)
 
 dcmap <- c(Chemotherapy="Chemo",
            `BCL2 family`="BCL2")
