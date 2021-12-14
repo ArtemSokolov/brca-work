@@ -1,5 +1,4 @@
 library(tidyverse)
-library(synExtra)
 
 ## Fit simple linear regression models
 fitLM <- function(nf, auc) {
@@ -20,8 +19,8 @@ CI95 <- function(nf, mdl) {
 
 ## Plot a model for a subset of drugs
 plotDrug <- function(X, M, drugs) {
-    Z <- filter(X, Drug %in% drugs)
-    Md <- M %>% filter(Drug %in% drugs) %>%
+    Z  <- inner_join(X, M, by="Drug") %>% filter(Generic %in% drugs)
+    Md <- M %>% filter(Generic %in% drugs) %>%
         nest(Model=c(Slope,Bias,Noise)) %>%
         mutate(Fit = map(Model, partial(CI95, unique(Z$nFeats)))) %>%
         unnest(Fit)
@@ -31,12 +30,13 @@ plotDrug <- function(X, M, drugs) {
         geom_errorbar(data=Md, aes(ymin=Lower, ymax=Upper),
                       color='red', alpha=0.4,
                       width=10, linetype='dashed') +
-        geom_point() + facet_wrap(~Drug, nrow=1) +
+        geom_point() + facet_wrap(~Generic, nrow=1) +
         xlab("Number of Features") +
         theme(strip.background = element_blank())
 }
 
 ## Fetch all background files
+##library(synExtra)
 ##synapser::synLogin()
 ##syn <- synDownloader("data/bk")
 ##fns <- synChildren("syn26487075") %>% syn()
@@ -53,19 +53,22 @@ X <- tibble(fn = fns) %>%
 
 MT <- read_csv("data/agents_metadata_nov30-2021.csv", col_types=cols()) %>%
     mutate(agent = str_split(agent, "/", simplify=TRUE)[,1]) %>%
-    select(Drug = agent, Class=drug_class)
+    select(Drug = agent, Generic = generic_name)
+
+F <- read_csv("data/anova.csv", col_types=cols()) %>%
+    select(Generic = generic_name, Class = drug_class, `F-statistic` = F_GR_AOC)
 
 ## Fit simple linear models to each drug
 M <- X %>% group_by(Drug) %>%
     summarize( across(c(nFeats, AUC), list) ) %>%
     mutate(Model = map2(nFeats, AUC, fitLM)) %>%
     select(Drug, Model) %>% unnest(Model) %>%
-    left_join(MT, by="Drug")
+    left_join(MT, by="Drug") %>% inner_join(F, by="Generic")
 
 ## Plot an overview
-vh <- c("Alpelisib", "Pin1-3", "Ipatasertib", "Everolimus")
-pal <- c("black", ggthemes::few_pal()(8), "darkgray")
-M1 <- M %>% mutate( Label=ifelse(Drug %in% vh, Drug, "") )
+vh <- c("alpelisib", "Pin1-3", "ipatasertib", "everolimus")
+pal <- c("black", colorblindr::palette_OkabeIto)
+M1 <- M %>% mutate( Label=ifelse(Generic %in% vh, Generic, "") )
 gg1 <- ggplot(M1, aes(x=Slope, y=Bias, color=Class)) +
     theme_bw() + geom_point() +
     scale_color_manual(values=pal, guide=FALSE) +
@@ -83,5 +86,14 @@ gg <- gridExtra::grid.arrange(gg1, gg2, gg3,
                                                   c(3,3)),
                               heights=c(1.7,1), widths=c(0.8,1))
 
-ggsave("plots/bkmodel.png", gg, width=10, height=6)
+ggsave("plots/04-bkmodel.png", gg, width=10, height=6)
+
+rsq <- with(M1, cor(`F-statistic`, Bias)^2) %>%
+    round(3) %>% str_c("~italic(r)^2 == ", .)
+             
+gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Bias, color=Class)) +
+    theme_bw() + geom_point() + scale_color_manual(values=pal) +
+    annotate('text', 1.4, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
+ggplot2::ggsave("plots/04-bias-f.png", gg4, width=6, height=4)
+
 write_csv(M, "output/BK-models.csv")

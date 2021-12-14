@@ -1,7 +1,6 @@
 library(tidyverse)
 
 vAll <- scan("data/all-genes.txt", what=character())
-core282 <- scan("sets/core282.txt", what=character())
 
 GS <- read_tsv("data/pub-sets.tsv", col_types=cols()) %>%
     select(-URL) %>%
