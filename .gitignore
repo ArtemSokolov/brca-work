@@ -2,6 +2,7 @@ data/
 output/
 plots/
 sets/
+aucs/
 
 # History files
 .Rhistory

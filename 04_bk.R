@@ -38,9 +38,9 @@ plotDrug <- function(X, M, drugs) {
 ## Fetch all background files
 ##library(synExtra)
 ##synapser::synLogin()
-##syn <- synDownloader("data/bk")
+##syn <- synDownloader("aucs/bk")
 ##fns <- synChildren("syn26487075") %>% syn()
-fns <- list.files("data/bk", full.names=TRUE)
+fns <- list.files("aucs/bk", full.names=TRUE)
 
 ## Load everything
 X <- tibble(fn = fns) %>%
