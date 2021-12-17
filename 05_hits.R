@@ -13,8 +13,9 @@ stopifnot(length(fnsCore) + length(fnsLit) == length(fnsSet))
 
 ## Metadata for literature signatures
 LM <- read_tsv("data/lit-meta.tsv", col_types=cols(PMID=col_character())) %>%
-    select( Name=PMID, SigOf=Drug ) %>%
-    mutate( across(SigOf, recode, `fulvestrant+ribociclib` = "fulv+ribo") )
+    mutate(Name = str_c("PMID", PMID)) %>%
+    select(Name, SigOf=Drug) %>%
+    mutate(across(SigOf, recode, `fulvestrant+ribociclib` = "ribociclib"))
 
 ## Load everything and match up results against input sets and background models
 MBK <- read_csv("output/BK-models.csv", col_types=cols())
@@ -27,6 +28,7 @@ X <- list( Core = fnsCore, Literature = fnsLit ) %>%
     mutate(Name = str_split(basename(fn), "-", simplify=TRUE)[,1],
            AUC  = map(fn, read_csv, col_types=cols())) %>%
     inner_join(S, by="Name") %>% select(-fn, -Set) %>%
+    mutate(Type = ifelse(Name == "PMID25501949", "Core", Type)) %>%
     unnest(AUC) %>% inner_join(MBK, by="Drug") %>%
     left_join(LM, by="Name")
 
@@ -36,39 +38,34 @@ P <- X %>% mutate(AUCe  = nFeats*Slope + Bias,
     select(Type, Name, SigOf, Generic, Class, nFeats, `F-statistic`, AUCe, Noise, AUC, pval)
 write_csv(P, "output/summary.csv" )
 
-P <- P %>% mutate(nlog10p = -log10(pval),
-                  Highlight = ifelse(pval < 0.01, "yes", "no")) %>%
-    group_by(Highlight) %>% mutate(Index = 1:n()) %>% ungroup() %>%
-    mutate(Label=ifelse(Highlight == "yes", as.character(Index), ""))
-
-vs <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0005)
-gg1 <- ggplot(P, aes(x=AUC, y=nlog10p, color=Highlight)) + theme_bw() +
-    geom_point(size=0.5) +
-    scale_y_continuous(breaks=-log10(vs), labels=as.character(vs), name="p value") +
-    facet_wrap(~Type, nrow=1) +
-    theme(strip.background=element_blank()) +
-    scale_color_manual(values=c("yes"="red", "no"="black"), guide='none') +
-    ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE, size=2, segment.size=0.2)
-
-ggsave("plots/05-summary.png", gg1, width=6, height=3)
-
+## Harmonic mean to aggregate p values for a single per-signature metric
 hmean <- function(x) {
     length(x) / sum( 1/x )
 }
+HMP <- P %>% group_by(Name, SigOf, Type) %>%
+    summarize( across(pval, hmean), .groups="drop" ) %>%
+    mutate(Generic = "Harmonic\nmean p-val")
 
+## Supplementary computations for the figure
+PLT <- bind_rows(P, HMP, .id="Category") %>%
+    mutate(nlogp = -log10(pval),
+           Label = ifelse((pval < 0.05) | (Category == 2),
+                          as.character(round(pval,3)), ""),
+           Signature = ifelse(is.na(SigOf), Name, str_c(Name, "\n(", SigOf, ")")),
+           Highlight = ifelse(SigOf == Generic, "yes", "no"))
+
+## Plot all-by-all hits
 pal <- c("#F7F7F7", rev(RColorBrewer::brewer.pal(n=7, name="RdBu"))[4:7])
-##pal <- RColorBrewer::brewer.pal( 9, "YlOrBr" ) %>% colorRampPalette
-HMP <- P %>% group_by( Name, Class ) %>%
-    summarize(hmp = hmean(pval), .groups="drop") %>%
-    mutate(nlogp = -log10(hmp),
-           Label = ifelse(hmp < 0.05, as.character(round(hmp, 3)), ""))
-
-vs <- c(0.5, 0.1, 0.05, 0.01, 0.005)
-gg2 <- ggplot( HMP, aes(x=Name, y=Class, fill=nlogp) ) +
+vs <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0005)
+gg <- ggplot(PLT, aes(x=Signature, y=Generic, fill=nlogp)) +
     theme_bw() + geom_tile() +
-    geom_text(aes(label=Label)) +
-    scale_fill_gradientn(colors=pal, breaks=-log10(vs),
-                         labels=vs, name="HMP") +
-    theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
-ggsave( "plots/05-hmp.png", gg2, width=9, height=6 )
-
+    geom_tile(data=filter(PLT, Highlight=="yes"), color="black", size=1) +
+    geom_text(aes(label=Label), color="black") +
+    scale_fill_gradientn(name="p-value", colors=pal,
+                         labels=vs, breaks=-log10(vs)) +
+    ylab("Drug") +
+    facet_grid(Category~Type, space="free", scales="free") +
+    theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5),
+          strip.text = element_blank(),
+          strip.background = element_blank())
+ggsave("plots/05-all.png", gg, width=9, height=10)
