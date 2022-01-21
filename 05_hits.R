@@ -30,7 +30,8 @@ X <- list( Core = fnsCore, Literature = fnsLit ) %>%
     inner_join(S, by="Name") %>% select(-fn, -Set) %>%
     mutate(Type = ifelse(Name == "PMID25501949", "Core", Type)) %>%
     unnest(AUC) %>% inner_join(MBK, by="Drug") %>%
-    left_join(LM, by="Name")
+    left_join(LM, by="Name") %>%
+    filter(Name != "core282")
 
 ## Compute the p values associated with each AUC measure
 P <- X %>% mutate(AUCe  = nFeats*Slope + Bias,

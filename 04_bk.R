@@ -71,7 +71,8 @@ pal <- c("black", colorblindr::palette_OkabeIto)
 M1 <- M %>% mutate( Label=ifelse(Generic %in% vh, Generic, "") )
 gg1 <- ggplot(M1, aes(x=Slope, y=Bias, color=Class)) +
     theme_bw() + geom_point() +
-    scale_color_manual(values=pal, guide=FALSE) +
+    scale_color_manual(values=pal, guide='none') +
+    ylab("Intercept") +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE)
 gg2 <- ggplot(M1, aes(x=Bias, y=Noise, color=Class)) +
     theme_bw() + geom_point() +
@@ -81,19 +82,22 @@ gg2 <- ggplot(M1, aes(x=Bias, y=Noise, color=Class)) +
 ## Plot a handful of examples
 gg3 <- plotDrug(X, M, vh)
 
-gg <- gridExtra::grid.arrange(gg1, gg2, gg3,
+rsq <- with(M1, cor(`F-statistic`, Bias)^2) %>%
+    round(3) %>% str_c("~italic(r)^2 == ", ., "")
+             
+gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Bias, color=Class)) +
+    ylab("Intercept") + xlab("Correlation w/ subtype") +
+    theme_bw() + geom_point() + scale_color_manual(values=pal) +
+    annotate('text', 1.2, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
+
+
+gg <- gridExtra::grid.arrange(gg1, gg4, gg3,
                               layout_matrix=rbind(c(1,2),
                                                   c(3,3)),
                               heights=c(1.7,1), widths=c(0.8,1))
 
 ggsave("plots/04-bkmodel.png", gg, width=10, height=6)
 
-rsq <- with(M1, cor(`F-statistic`, Bias)^2) %>%
-    round(3) %>% str_c("~italic(r)^2 == ", .)
-             
-gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Bias, color=Class)) +
-    theme_bw() + geom_point() + scale_color_manual(values=pal) +
-    annotate('text', 1.4, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
-ggplot2::ggsave("plots/04-bias-f.png", gg4, width=6, height=4)
+ggplot2::ggsave("plots/04-bias-noise.png", gg2, width=6, height=4)
 
 write_csv(M, "output/BK-models.csv")
