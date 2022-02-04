@@ -93,6 +93,7 @@ gg1 <- ggplot(M1, aes(x=Slope, y=Bias, color=Class)) +
 gg2 <- ggplot(M1, aes(x=Bias, y=Noise, color=Class)) +
     theme_bw() + geom_point() +
     scale_color_manual(values=pal) +
+    xlab("Intercept") +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE)
 
 ## Plot a handful of examples
@@ -107,7 +108,7 @@ gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Bias, color=Class)) +
     annotate('text', 1.2, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
 
 
-gg <- gridExtra::grid.arrange(gg1, gg4, gg3,
+gg <- gridExtra::grid.arrange(gg1, gg2, gg3,
                               layout_matrix=rbind(c(1,2),
                                                   c(3,3)),
                               heights=c(1.7,1), widths=c(0.8,1))
@@ -115,5 +116,6 @@ gg <- gridExtra::grid.arrange(gg1, gg4, gg3,
 ggsave("plots/04-bkmodel.png", gg, width=10, height=6)
 
 ggplot2::ggsave("plots/04-bias-noise.png", gg2, width=6, height=4)
+ggplot2::ggsave("plots/04-bias-cor.png", gg4, width=6, height=4)
 
 write_csv(M, "output/BK-models.csv")
