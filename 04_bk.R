@@ -38,12 +38,11 @@ plotDrug <- function(X, M, drugs) {
 ## Fetch all background files
 ##library(synExtra)
 ##synapser::synLogin()
-##syn <- synDownloader("aucs/bk")
+##syn <- synDownloader("aucs/rnabg")
 ##fns <- synChildren("syn26487075") %>% syn()
-fns <- list.files("aucs/bk", full.names=TRUE)
 
-## Load everything
-X <- tibble(fn = fns) %>%
+## RNAseq background
+X <- tibble(fn = list.files("aucs/rnabg", full.names=TRUE)) %>%
     mutate(fnb    = basename(fn),
            tokens = str_split(fnb, "-"),
            nFeats = map_int(tokens, ~as.integer(.x[2])),
@@ -51,6 +50,23 @@ X <- tibble(fn = fns) %>%
            Data   = map(fn, read_csv, col_types=cols())) %>%
     select(-fn, -fnb, -tokens) %>% unnest(Data)
 
+## MassSpec background
+XMS <- tibble(fn = list.files("aucs/msbg", full.names=TRUE)) %>%
+    mutate(fnb    = basename(fn),
+           tokens = str_split(fnb, "-"),
+           nFeats = map_int(tokens, ~as.integer(.x[2])),
+           Iter   = map_int(tokens, ~as.integer(.x[3])),
+           Data   = map(fn, read_csv, col_types=cols())) %>%
+    select(-fn, -fnb, -tokens) %>% unnest(Data)
+
+## Quick correlation check
+inner_join(select(X, Drug, AUC), select(XMS, Drug, AUC),
+           by="Drug", suffix=c("_rna", "_ms")) %>%
+    group_by(Drug) %>%
+    summarize_at( c("AUC_rna", "AUC_ms"), mean ) %>%
+    with( cor(AUC_rna, AUC_ms, method="pearson") )
+    
+## Other data files
 MT <- read_csv("data/agents_metadata_nov30-2021.csv", col_types=cols()) %>%
     mutate(agent = str_split(agent, "/", simplify=TRUE)[,1]) %>%
     select(Drug = agent, Generic = generic_name)

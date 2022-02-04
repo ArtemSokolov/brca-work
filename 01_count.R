@@ -15,6 +15,8 @@ PMID <- jsonlite::read_json('data/pmids_for_drugs.json') %>%
     mutate(Evidence = PubChem + MeSH + Grounding) %>%
     left_join(M, by="Drug")
 
+write_csv(PMID, 'data/pmids_for_drugs_tidy.csv')
+
 plotCounts <- function() {
     X <- PMID %>% group_by(Drug) %>%
         summarize(nPMID = length(PMID),
