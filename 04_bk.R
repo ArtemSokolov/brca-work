@@ -35,37 +35,29 @@ plotDrug <- function(X, M, drugs) {
         theme(strip.background = element_blank())
 }
 
+## Reads a background file and isolates #Features and Iteration index
+read_bg <- function(fn)
+    read_csv(fn, col_types=cols()) %>%
+        mutate(tokens = str_split(Signature, "-"),
+               nFeats = map_int(tokens, ~as.integer(.x[2])),
+               Iter   = map_int(tokens, ~as.integer(.x[3])),
+               tokens = NULL)
+
 ## Fetch all background files
-##library(synExtra)
-##synapser::synLogin()
-##syn <- synDownloader("aucs/rnabg")
-##fns <- synChildren("syn26487075") %>% syn()
+## synapser::synLogin()
+## synExtra::synDownloader("aucs")("syn27221488", "syn27221487")
 
-## RNAseq background
-X <- tibble(fn = list.files("aucs/rnabg", full.names=TRUE)) %>%
-    mutate(fnb    = basename(fn),
-           tokens = str_split(fnb, "-"),
-           nFeats = map_int(tokens, ~as.integer(.x[2])),
-           Iter   = map_int(tokens, ~as.integer(.x[3])),
-           Data   = map(fn, read_csv, col_types=cols())) %>%
-    select(-fn, -fnb, -tokens) %>% unnest(Data)
-
-## MassSpec background
-XMS <- tibble(fn = list.files("aucs/msbg", full.names=TRUE)) %>%
-    mutate(fnb    = basename(fn),
-           tokens = str_split(fnb, "-"),
-           nFeats = map_int(tokens, ~as.integer(.x[2])),
-           Iter   = map_int(tokens, ~as.integer(.x[3])),
-           Data   = map(fn, read_csv, col_types=cols())) %>%
-    select(-fn, -fnb, -tokens) %>% unnest(Data)
+## Load background files
+XRNA <- read_bg("aucs/rnabg-aucs.csv")
+XMS  <- read_bg("aucs/msbg-aucs.csv")
 
 ## Quick correlation check
-inner_join(select(X, Drug, AUC), select(XMS, Drug, AUC),
-           by="Drug", suffix=c("_rna", "_ms")) %>%
-    group_by(Drug) %>%
-    summarize_at( c("AUC_rna", "AUC_ms"), mean ) %>%
-    with( cor(AUC_rna, AUC_ms, method="pearson") )
-    
+bind_rows(RNA=XRNA, MS=XMS, .id="Modality") %>%
+    group_by(Modality, Drug) %>%
+    summarize(across(AUC, mean), .groups="drop") %>%
+    spread(Modality, AUC) %>%
+    with(cor(MS, RNA, method="pearson"))
+
 ## Other data files
 MT <- read_csv("data/agents_metadata_nov30-2021.csv", col_types=cols()) %>%
     mutate(agent = str_split(agent, "/", simplify=TRUE)[,1]) %>%
