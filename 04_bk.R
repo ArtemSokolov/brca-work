@@ -6,22 +6,22 @@ fitLM <- function(nf, auc) {
     b0 <- mean(auc) - b1*mean(nf)
     s  <- sd(auc - (b0 + nf*b1))
 
-    tibble(Slope=b1, Bias=b0, Noise=s)
+    tibble(Slope=b1, Intercept=b0, SD=s)
 }
 
 ## Identify the 95% CI of AUC for a given number of features
 CI95 <- function(nf, mdl) {
     tibble(nFeats=nf) %>%
-        mutate(AUC   = mdl$Slope * nFeats + mdl$Bias,
-               Upper = AUC + 1.96*mdl$Noise,
-               Lower = AUC - 1.96*mdl$Noise)
+        mutate(AUC   = mdl$Slope * nFeats + mdl$Intercept,
+               Upper = AUC + 1.96*mdl$SD,
+               Lower = AUC - 1.96*mdl$SD)
 }
 
 ## Plot a model for a subset of drugs
 plotDrug <- function(X, M, drugs) {
     Z  <- inner_join(X, M, by="Drug") %>% filter(Generic %in% drugs)
     Md <- M %>% filter(Generic %in% drugs) %>%
-        nest(Model=c(Slope,Bias,Noise)) %>%
+        nest(Model=c(Slope,Intercept,SD)) %>%
         mutate(Fit = map(Model, partial(CI95, unique(Z$nFeats)))) %>%
         unnest(Fit)
 
@@ -67,7 +67,7 @@ F <- read_csv("data/anova.csv", col_types=cols()) %>%
     select(Generic = generic_name, Class = drug_class, `F-statistic` = F_GR_AOC)
 
 ## Fit simple linear models to each drug
-M <- X %>% group_by(Drug) %>%
+M <- XRNA %>% group_by(Drug) %>%
     summarize( across(c(nFeats, AUC), list) ) %>%
     mutate(Model = map2(nFeats, AUC, fitLM)) %>%
     select(Drug, Model) %>% unnest(Model) %>%
@@ -77,37 +77,41 @@ M <- X %>% group_by(Drug) %>%
 vh <- c("alpelisib", "Pin1-3", "ipatasertib", "everolimus")
 pal <- c("black", colorblindr::palette_OkabeIto)
 M1 <- M %>% mutate( Label=ifelse(Generic %in% vh, Generic, "") )
-gg1 <- ggplot(M1, aes(x=Slope, y=Bias, color=Class)) +
+gg1 <- ggplot(M1, aes(x=Slope, y=Intercept, color=Class)) +
     theme_bw() + geom_point() +
     scale_color_manual(values=pal, guide='none') +
-    ylab("Intercept") +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE)
-gg2 <- ggplot(M1, aes(x=Bias, y=Noise, color=Class)) +
+gg2 <- ggplot(M1, aes(x=Intercept, y=SD, color=Class)) +
     theme_bw() + geom_point() +
     scale_color_manual(values=pal) +
-    xlab("Intercept") +
+    ylab("Standard Deviation") +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE)
 
 ## Plot a handful of examples
-gg3 <- plotDrug(X, M, vh)
+gg3 <- plotDrug(XRNA, M, vh)
 
-rsq <- with(M1, cor(`F-statistic`, Bias)^2) %>%
+rsq <- with(M1, cor(`F-statistic`, Intercept)^2) %>%
     round(3) %>% str_c("~italic(r)^2 == ", ., "")
              
-gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Bias, color=Class)) +
+gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Intercept, color=Class)) +
     ylab("Intercept") + xlab("Correlation w/ subtype") +
     theme_bw() + geom_point() + scale_color_manual(values=pal) +
+    ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE) +
     annotate('text', 1.2, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
 
+## Put everything together
+void <- ggplot() + theme_void()
+f1 <- cowplot::plot_grid( gg1, void, gg4, ncol=3, labels=c("b", "", "c"),
+                          rel_widths=c(0.75,0.02,1), label_size=20 )
 
-gg <- gridExtra::grid.arrange(gg1, gg2, gg3,
-                              layout_matrix=rbind(c(1,2),
-                                                  c(3,3)),
-                              heights=c(1.7,1), widths=c(0.8,1))
+ff <- cowplot::plot_grid( gg3, NULL, f1, ncol=1, labels=c("a","",""),
+                         rel_heights=c(1,0.02,1.7), label_size=20 )
+##    cowplot::draw_plot_label( c("a", "b"), c(0, 0.4) )
 
-ggsave("plots/04-bkmodel.png", gg, width=10, height=6)
+str_c("plots/Figure-BK-", Sys.Date(), ".png") %>% ggsave(ff, width=10, height=6)
+str_c("plots/Figure-BK-", Sys.Date(), ".pdf") %>% ggsave(ff, width=10, height=6)
 
-ggplot2::ggsave("plots/04-bias-noise.png", gg2, width=6, height=4)
-ggplot2::ggsave("plots/04-bias-cor.png", gg4, width=6, height=4)
+##ggplot2::ggsave("plots/04-bias-noise.png", gg2, width=6, height=4)
+##ggplot2::ggsave("plots/04-bias-cor.png", gg4, width=6, height=4)
 
 write_csv(M, "output/BK-models.csv")
