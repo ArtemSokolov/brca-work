@@ -1,5 +1,6 @@
-image: rocker/tidyverse:latest
+# image: rocker/tidyverse:latest
 
 tasks:
   - init: |
-      echo "My test: $TEST" > test.txt
+      eval $(command gp env -e)
+      echo "My test: $TEST"
