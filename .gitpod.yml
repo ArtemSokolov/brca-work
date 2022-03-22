@@ -1,1 +1,5 @@
 image: rocker/tidyverse:latest
+
+tasks:
+  - init: |
+    echo $TEST
