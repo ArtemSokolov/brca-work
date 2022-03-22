@@ -1,6 +1,6 @@
-# image: rocker/tidyverse:latest
+image:
+  file: .gitpod.Dockerfile
 
 tasks:
   - init: |
       eval $(command gp env -e)
-      echo "My test: $TEST"
