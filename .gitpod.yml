@@ -2,4 +2,4 @@ image: rocker/tidyverse:latest
 
 tasks:
   - init: |
-      echo $TEST
+      echo "My test: $TEST" > test.txt
