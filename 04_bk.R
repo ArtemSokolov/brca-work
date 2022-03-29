@@ -94,24 +94,23 @@ rsq <- with(M1, cor(`F-statistic`, Intercept)^2) %>%
     round(3) %>% str_c("~italic(r)^2 == ", ., "")
              
 gg4 <- ggplot(M1, aes(x=`F-statistic`, y=Intercept, color=Class)) +
-    ylab("Intercept") + xlab("Correlation w/ subtype") +
+    ylab("Intercept") + xlab("F-statistic") +
     theme_bw() + geom_point() + scale_color_manual(values=pal) +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE) +
     annotate('text', 1.2, 0.5, hjust=0, vjust=1, label=rsq, parse=TRUE)
 
-## Put everything together
+## Plot the main figure
 void <- ggplot() + theme_void()
 f1 <- cowplot::plot_grid( gg1, void, gg4, ncol=3, labels=c("b", "", "c"),
                           rel_widths=c(0.75,0.02,1), label_size=20 )
 
 ff <- cowplot::plot_grid( gg3, NULL, f1, ncol=1, labels=c("a","",""),
                          rel_heights=c(1,0.02,1.7), label_size=20 )
-##    cowplot::draw_plot_label( c("a", "b"), c(0, 0.4) )
 
 str_c("plots/Figure-BK-", Sys.Date(), ".png") %>% ggsave(ff, width=10, height=6)
 str_c("plots/Figure-BK-", Sys.Date(), ".pdf") %>% ggsave(ff, width=10, height=6)
 
-##ggplot2::ggsave("plots/04-bias-noise.png", gg2, width=6, height=4)
-##ggplot2::ggsave("plots/04-bias-cor.png", gg4, width=6, height=4)
+## Supplement -- intercept vs. standard deviation
+ggplot2::ggsave("plots/Suppl-BKSD.png", gg2, width=6, height=4)
 
 write_csv(M, "output/BK-models.csv")
