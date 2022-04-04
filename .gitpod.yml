@@ -4,3 +4,5 @@ image:
 tasks:
   - init: |
       eval $(command gp env -e)
+      mkdir -p /workspace/data/aucs
+      R -s -e "synapser::synLogin('$SYN_USER','$SYN_TOKEN'); source('00_syn.R')"
