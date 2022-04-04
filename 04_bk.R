@@ -48,8 +48,8 @@ read_bg <- function(fn)
 ## synExtra::synDownloader("aucs")("syn27221488", "syn27221487")
 
 ## Load background files
-XRNA <- read_bg("aucs/rnabg-aucs.csv")
-XMS  <- read_bg("aucs/msbg-aucs.csv")
+XRNA <- read_bg("/workspace/data/aucs/rnabg-aucs.csv")
+XMS  <- read_bg("/workspace/data/aucs/msbg-aucs.csv")
 
 ## Quick correlation check
 bind_rows(RNA=XRNA, MS=XMS, .id="Modality") %>%
