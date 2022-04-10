@@ -5,9 +5,9 @@ image:
 tasks:
   - init: |
       eval $(command gp env -e)
-      mkdir -p /workspace/output
-      mkdir -p /workspace/plots
-      mkdir -p /workspace/data/aucs
+      mkdir -p output
+      mkdir -p plots
+      mkdir -p data/aucs
       R -s -e "synapser::synLogin('$SYN_USER','$SYN_TOKEN'); source('00_syn.R')"
 
 vscode:
