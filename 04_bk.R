@@ -46,10 +46,10 @@ read_bg <- function(fn)
 ## Load background files
 XRNA <- read_bg("data/aucs/rnabg-aucs.csv")
 XMS  <- read_bg("data/aucs/msbg-aucs.csv")
+XX   <- bind_rows(RNA=XRNA, MS=XMS, .id="Modality")
 
 ## Quick correlation check
-bind_rows(RNA=XRNA, MS=XMS, .id="Modality") %>%
-    group_by(Modality, Drug) %>%
+XX %>% group_by(Modality, Drug) %>%
     summarize(across(AUC, mean), .groups="drop") %>%
     spread(Modality, AUC) %>%
     with(cor(MS, RNA, method="pearson"))
@@ -62,11 +62,11 @@ MT <- read_csv("data/agents_metadata.csv", col_types=cols()) %>%
 F <- read_csv("data/anova.csv", col_types=cols()) %>%
     select(Generic = generic_name, Class = drug_class, `F-statistic` = F_GR_AOC)
 
-## Fit simple linear models to each drug
-M <- XRNA %>% group_by(Drug) %>%
-    summarize( across(c(nFeats, AUC), list) ) %>%
+## Fit simple linear models to each drug/platform pair
+M <- XX %>% group_by(Modality, Drug) %>%
+    summarize( across(c(nFeats, AUC), list), .groups="drop" ) %>%
     mutate(Model = map2(nFeats, AUC, fitLM)) %>%
-    select(Drug, Model) %>% unnest(Model) %>%
+    select(Modality, Drug, Model) %>% unnest(Model) %>%
     left_join(MT, by="Drug") %>% inner_join(F, by="Generic")
 
 ## Okabe Ito palette
@@ -76,7 +76,8 @@ pal <- c("black", "#E69F00", "#56B4E9",
 
 ## Plot an overview
 vh <- c("alpelisib", "Pin1-3", "ipatasertib", "everolimus")
-M1 <- M %>% mutate( Label=ifelse(Generic %in% vh, Generic, "") )
+M1 <- M %>% filter(Modality=="RNA") %>%
+    mutate( Label=ifelse(Generic %in% vh, Generic, "") )
 gg1 <- ggplot(M1, aes(x=Slope, y=Intercept, color=Class)) +
     theme_bw() + geom_point() +
     scale_color_manual(values=pal, guide='none') +
@@ -87,9 +88,11 @@ gg2 <- ggplot(M1, aes(x=Intercept, y=SD, color=Class)) +
     ylab("Standard Deviation") +
     ggrepel::geom_text_repel(aes(label=Label), show.legend=FALSE)
 
-## Plot a handful of examples
-gg3 <- plotDrug(XRNA, M, vh)
+## Plot a handful of examples in RNA space
+gg3 <- M %>% filter(Modality=="RNA") %>%
+    plotDrug(XRNA, ., vh)
 
+## Compare against the F statistics
 rsq <- with(M1, cor(`F-statistic`, Intercept)^2) %>%
     round(3) %>% str_c("~italic(r)^2 == ", ., "")
              
