@@ -30,12 +30,6 @@ XRNA <- read_bg("data/aucs/rnabg-aucs.csv")
 XMS  <- read_bg("data/aucs/msbg-aucs.csv")
 XX   <- bind_rows(RNA = XRNA, MS = XMS, .id = "Modality")
 
-## Quick correlation check
-group_by(XX, Modality, Drug) %>%
-    summarize(across(AUC, mean), .groups = "drop") %>%
-    spread(Modality, AUC) %>%
-    with(cor(MS, RNA, method = "pearson"))
-
 ## Other data files
 MT <- read_csv("data/agents_metadata.csv", col_types = cols()) %>%
     mutate(agent = str_split(agent, "/", simplify = TRUE)[, 1]) %>%
@@ -122,5 +116,6 @@ rsq_vs <- with(Mvs, cor(RNA, MS)^2) %>% round(3) %>%
 
 ggvs <- plotModels(Mvs, RNA, MS, c()) +
     xlab("Intercept (RNAseq)") + ylab("Intercept (Mass Spec)") +
-    annotate("text", 0.7, 0.5, hjust = 0, vjust = 1, label = rsq_vs, parse = TRUE)
-ggplot2::ggsave("plots/Suppl-RNA-v-MS.png", ggvs, width = 6, height = 4)
+    annotate("text", 0.7, 0.5, hjust = 0, vjust = 1,
+        label = rsq_vs, parse = TRUE)
+ggplot2::ggsave("plots/Suppl-BK-RNA-v-MS.png", ggvs, width = 6, height = 4)
