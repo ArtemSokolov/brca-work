@@ -31,8 +31,7 @@ XMS  <- read_bg("data/aucs/msbg-aucs.csv")
 XX   <- bind_rows(RNA = XRNA, MS = XMS, .id = "Modality")
 
 ## Quick correlation check
-XX %>%
-    group_by(Modality, Drug) %>%
+group_by(XX, Modality, Drug) %>%
     summarize(across(AUC, mean), .groups = "drop") %>%
     spread(Modality, AUC) %>%
     with(cor(MS, RNA, method = "pearson"))
@@ -46,8 +45,7 @@ F <- read_csv("data/anova.csv", col_types = cols()) %>%
     select(Generic = generic_name, Class = drug_class, `F-statistic` = F_GR_AOC)
 
 ## Fit simple linear models to each drug/platform pair
-M <- XX %>%
-    group_by(Modality, Drug) %>%
+M <- group_by(XX, Modality, Drug) %>%
     summarize(across(c(nFeats, AUC), list), .groups = "drop") %>%
     mutate(Model = map2(nFeats, AUC, fitLM)) %>%
     select(Modality, Drug, Model) %>%
@@ -116,7 +114,13 @@ str_c(pfx, ".pdf") %>% ggsave(ff, width = 10, height = 6)
 ggBKSD <- plotModels(MRNA, Intercept, SD, vh) + ylab("Standard Deviation")
 ggplot2::ggsave("plots/Suppl-BKSD.png", ggBKSD, width = 6, height = 4)
 
-## Supplement -- Mass Spec space
-MMS <- M %>% filter(Modality == "MS")
-ffMS <- plotModels(MMS, Slope, Intercept, c())
-ggplot2::ggsave("plots/Suppl-MS.png", ffMS, width = 6, height = 4)
+## Supplement -- RNA vs Mass Spec space
+Mvs <- select(M, Modality, Drug, Generic, Intercept, Class) %>%
+    pivot_wider(names_from = "Modality", values_from = "Intercept")
+rsq_vs <- with(Mvs, cor(RNA, MS)^2) %>% round(3) %>% 
+    str_c("~italic(r)^2 == ", ., "")
+
+ggvs <- plotModels(Mvs, RNA, MS, c()) +
+    xlab("Intercept (RNAseq)") + ylab("Intercept (Mass Spec)") +
+    annotate("text", 0.7, 0.5, hjust = 0, vjust = 1, label = rsq_vs, parse = TRUE)
+ggplot2::ggsave("plots/Suppl-RNA-v-MS.png", ggvs, width = 6, height = 4)
