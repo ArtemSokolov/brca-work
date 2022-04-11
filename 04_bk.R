@@ -43,13 +43,9 @@ read_bg <- function(fn)
                Iter   = map_int(tokens, ~as.integer(.x[3])),
                tokens = NULL)
 
-## Fetch all background files
-## synapser::synLogin()
-## synExtra::synDownloader("aucs")("syn27221488", "syn27221487")
-
 ## Load background files
-XRNA <- read_bg("/workspace/data/aucs/rnabg-aucs.csv")
-XMS  <- read_bg("/workspace/data/aucs/msbg-aucs.csv")
+XRNA <- read_bg("data/aucs/rnabg-aucs.csv")
+XMS  <- read_bg("data/aucs/msbg-aucs.csv")
 
 ## Quick correlation check
 bind_rows(RNA=XRNA, MS=XMS, .id="Modality") %>%
@@ -59,7 +55,7 @@ bind_rows(RNA=XRNA, MS=XMS, .id="Modality") %>%
     with(cor(MS, RNA, method="pearson"))
 
 ## Other data files
-MT <- read_csv("data/agents_metadata_nov30-2021.csv", col_types=cols()) %>%
+MT <- read_csv("data/agents_metadata.csv", col_types=cols()) %>%
     mutate(agent = str_split(agent, "/", simplify=TRUE)[,1]) %>%
     select(Drug = agent, Generic = generic_name)
 
@@ -73,9 +69,13 @@ M <- XRNA %>% group_by(Drug) %>%
     select(Drug, Model) %>% unnest(Model) %>%
     left_join(MT, by="Drug") %>% inner_join(F, by="Generic")
 
+## Okabe Ito palette
+pal <- c("black", "#E69F00", "#56B4E9",
+    "#009E73", "#F0E442", "#0072B2",
+    "#D55E00", "#CC79A7", "#999999")
+
 ## Plot an overview
 vh <- c("alpelisib", "Pin1-3", "ipatasertib", "everolimus")
-pal <- c("black", colorblindr::palette_OkabeIto)
 M1 <- M %>% mutate( Label=ifelse(Generic %in% vh, Generic, "") )
 gg1 <- ggplot(M1, aes(x=Slope, y=Intercept, color=Class)) +
     theme_bw() + geom_point() +
