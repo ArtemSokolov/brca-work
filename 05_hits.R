@@ -28,12 +28,16 @@ bk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
     filter(Modality == "RNA") %>%
     select(-Modality)
 
-## Exclude some of the experimental drugs
+## Exclude some of the experimental drugs to improve interpretability
 dexcl <- c(
     "BSJ-01-175",
     "BSJ-03-124",
+    "E17",
     "FMF-04-107-2",
-    "FMF-04-112-1"
+    "FMF-04-112-1",
+    "THZ-P1-2",
+    "THZ-P1-2R",
+    "ZZ1-33B"
 )
 
 ## Load AUC values, match up against metadata and background models
@@ -45,7 +49,7 @@ x <- read_csv("data/aucs/rnasig-aucs.csv", col_types = cols()) %>%
         AUCe = Size * Slope + Intercept,
         pval  = pmap_dbl(list(AUC, AUCe, SD), pnorm, lower.tail = FALSE)
     ) %>%
-    select(Type, Signature, Of, Generic, Class, AUC, pval) %>%
+    select(Type, Signature, Of, Generic, Class, AUC, pval, `F-statistic`) %>%
     filter(!(Generic %in% dexcl))
 
 ## Harmonic mean to aggregate p values for a single per-signature metric
@@ -69,13 +73,17 @@ y <- bind_rows(x, hmp, .id = "Category") %>%
             str_sub(as.character(round(pval, 3)), 2),
             ""
         ),
-        Name = ifelse(
+        Signature = ifelse(
             is.na(Of),
             Signature,
             str_c(Signature, "\n(", Of, ")")
         ),
         Highlight = ifelse(Of == Generic, "yes", "no"),
-        Class = recode(Class, `BCL2 family` = "BCL2"),
+        Class = recode(
+            Class,
+            `BCL2 family` = "BCL2",
+            `DNA damage` = "DNA dmg"
+            ),
         Class = factor(Class, c(sort(unique(Class))[-1], ""))
     )
 
@@ -85,21 +93,26 @@ etxt <- function(s, ...) {
 }
 
 ## Plot all-by-all hits
-pal <- c("#F7F7F7", rev(RColorBrewer::brewer.pal(n=7, name="RdBu"))[4:7])
+pal <- c("#F7F7F7", rev(RColorBrewer::brewer.pal(n = 7, name = "RdBu"))[4:7])
 vs <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0005)
-gg <- ggplot(PLT, aes(y=Signature, x=Generic, fill=nlogp)) +
+gg <- ggplot(y, aes(y = Signature, x = Generic, fill = nlogp)) +
     theme_bw() + geom_tile() +
-    geom_tile(data=filter(PLT, Highlight=="yes"), color="black", size=1) +
-    geom_text(aes(label=Label), color="black", angle=90) +
-    scale_fill_gradientn(name="p-value", colors=pal,
-                         labels=vs, breaks=-log10(vs)) +
+    geom_tile(
+        data = filter(y, Highlight == "yes"),
+        color = "black", size = 1
+    ) +
+    geom_text(aes(label = Label), color = "black", angle = 90) +
+    scale_fill_gradientn(
+        name = "p-value", colors = pal, limits = c(0, 3.1),
+        labels = vs, breaks = -log10(vs)
+    ) +
     xlab("Drug") +
-    facet_grid(Type~Class, space="free", scales="free") +
-    theme(axis.text.x  = etxt(12, angle=90, hjust=1, vjust=0.5),
+    facet_grid(Type~Class, space = "free", scales = "free") +
+    theme(axis.text.x  = etxt(12, angle = 90, hjust = 1, vjust = 0.5),
           axis.text.y  = etxt(12), axis.title = etxt(14),
           legend.text = etxt(12), legend.title = etxt(14),
-          legend.key.height = unit(3,"line"),
+          legend.key.height = unit(3, "line"),
           strip.text.y = element_blank(),
           strip.text.x = etxt(12),
           strip.background = element_blank())
-ggsave("plots/05-hits.png", gg, width=20, height=10)
+ggsave("plots/05-hits.png", gg, width = 17, height = 9)
