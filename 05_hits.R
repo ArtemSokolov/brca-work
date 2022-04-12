@@ -1,26 +1,26 @@
 library(tidyverse)
 
 ## Fetch relevant files
-## library(synExtra)
-## synapser::synLogin()
-## synLit <- synDownloader("aucs/lit")
-## fnsCore <- synChildren("syn26529408") %>% synDownloader("aucs/core")()
-## fnsLit  <- synChildren("syn26529259") %>% synDownloader("aucs/lit")()
-fnsCore <- list.files("aucs/universal", full.names=TRUE)
-fnsLit  <- list.files("aucs/lit", full.names=TRUE)
-fnsSet  <- list.files("sets", full.names=TRUE)
-stopifnot(length(fnsCore) + length(fnsLit) == length(fnsSet))
+fnsSet  <- c(
+    list.files("data/sigs/lit", full.names=TRUE),
+    list.files("data/sigs/univ", full.names=TRUE)
+)
 
 ## Metadata for literature signatures
-LM <- read_tsv("data/lit-meta.tsv", col_types=cols(PMID=col_character())) %>%
+litmeta <- read_tsv("data/lit-meta.tsv",
+        col_types = cols(PMID = col_character())
+    ) %>%
     mutate(Name = str_c("PMID", PMID)) %>%
-    select(Name, SigOf=Drug) %>%
+    select(Name, SigOf = Drug, Size) %>%
     mutate(across(SigOf, recode,
                   `fulvestrant+ribociclib` = "ribociclib",
                   `hormonal therapy` = "hormonal"))
 
+## Background models for RNAseq performance
+mdlbk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
+    filter(Modality == "RNA")
+
 ## Load everything and match up results against input sets and background models
-MBK <- read_csv("output/BK-models.csv", col_types=cols())
 S <- tibble(fn = fnsSet) %>%
     mutate(Name   = str_split(basename(fn), "\\.", simplify=TRUE)[,1],
            Set    = map(fn, scan, what=character(), quiet=TRUE),
