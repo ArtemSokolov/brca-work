@@ -1,70 +1,88 @@
 library(tidyverse)
 
-## Fetch relevant files
-fnsSet  <- c(
-    list.files("data/sigs/lit", full.names=TRUE),
-    list.files("data/sigs/univ", full.names=TRUE)
+## Metadata for additional universal signatures
+meta_univ <- tibble(
+    Signature = c("core250", "pam50"),
+    Size      = c(250, 50),
+    Type      = "Universal"
 )
 
-## Metadata for literature signatures
-litmeta <- read_tsv("data/lit-meta.tsv",
+## Combine with the metadata for publishes signatures
+meta <- read_tsv("data/lit-meta.tsv",
         col_types = cols(PMID = col_character())
     ) %>%
-    mutate(Name = str_c("PMID", PMID)) %>%
-    select(Name, SigOf = Drug, Size) %>%
-    mutate(across(SigOf, recode,
-                  `fulvestrant+ribociclib` = "ribociclib",
-                  `hormonal therapy` = "hormonal"))
+    mutate(
+        Signature = str_c("PMID", PMID),
+        across(Drug, recode,
+            `fulvestrant+ribociclib` = "ribociclib",
+            `hormonal therapy` = "hormonal"),
+        Type = ifelse(Type != "Universal", "Experimental", "Universal"),
+        Of = ifelse(Type == "Universal", Modality, Drug),
+        across(Of, recode, `Gene Essentiality` = "Essentiality")
+    ) %>%
+    select(Signature, Of, Type, Size) %>%
+    bind_rows(meta_univ)
 
 ## Background models for RNAseq performance
-mdlbk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
-    filter(Modality == "RNA")
+bk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
+    filter(Modality == "RNA") %>%
+    select(-Modality)
 
-## Load everything and match up results against input sets and background models
-S <- tibble(fn = fnsSet) %>%
-    mutate(Name   = str_split(basename(fn), "\\.", simplify=TRUE)[,1],
-           Set    = map(fn, scan, what=character(), quiet=TRUE),
-           nFeats = map_int(Set, length)) %>% select(-fn)
-X <- list( Core = fnsCore, Literature = fnsLit ) %>%
-    enframe("Type", "fn") %>% unnest(fn) %>%
-    mutate(Name = str_split(basename(fn), "-", simplify=TRUE)[,1],
-           AUC  = map(fn, read_csv, col_types=cols())) %>%
-    inner_join(S, by="Name") %>% select(-fn, -Set) %>%
-    mutate(Type = ifelse(Name == "PMID25501949", "Core", Type)) %>%
-    unnest(AUC) %>% inner_join(MBK, by="Drug") %>%
-    left_join(LM, by="Name") %>%
-    filter(Name != "core282")
+## Exclude some of the experimental drugs
+dexcl <- c(
+    "BSJ-01-175",
+    "BSJ-03-124",
+    "FMF-04-107-2",
+    "FMF-04-112-1"
+)
 
-## Compute the p values associated with each AUC measure
-P <- X %>% mutate(AUCe  = nFeats*Slope + Bias,
-                  pval  = pmap_dbl(list(AUC, AUCe, Noise), pnorm, lower.tail=FALSE)) %>%
-    select(Type, Name, SigOf, Generic, Class, nFeats, `F-statistic`, AUCe, Noise, AUC, pval)
-write_csv(P, "output/summary.csv" )
+## Load AUC values, match up against metadata and background models
+## Compute p values associated with each AUC measure
+x <- read_csv("data/aucs/rnasig-aucs.csv", col_types = cols()) %>%
+    inner_join(bk, by = "Drug") %>%
+    inner_join(meta, by = "Signature") %>%
+    mutate(
+        AUCe = Size * Slope + Intercept,
+        pval  = pmap_dbl(list(AUC, AUCe, SD), pnorm, lower.tail = FALSE)
+    ) %>%
+    select(Type, Signature, Of, Generic, Class, AUC, pval) %>%
+    filter(!(Generic %in% dexcl))
 
 ## Harmonic mean to aggregate p values for a single per-signature metric
 hmean <- function(x) {
-    length(x) / sum( 1/x )
+    length(x) / sum(1 / x)
 }
-HMP <- P %>% group_by(Name, SigOf, Type) %>%
-    summarize( across(pval, hmean), .groups="drop" ) %>%
-    mutate(Generic = "Harmonic\nmean p-val",
-           Class = "")
+
+hmp <- group_by(x, Signature, Of, Type) %>%
+    summarize(across(pval, hmean), .groups = "drop") %>%
+    mutate(
+        Generic = "Harmonic\nmean p-val",
+        Class = ""
+    )
 
 ## Supplementary computations for the figure
-PLT <- bind_rows(P, HMP, .id="Category") %>%
-    mutate(nlogp = -log10(pval),
-           Label = ifelse((pval < 0.05) | (Category == 2),
-                          str_sub(as.character(round(pval,3)), 2), ""),
-           Signature = ifelse(is.na(SigOf), Name, str_c(Name, "\n(", SigOf, ")")),
-           Signature = recode(Signature,
-                              PMID25501949="PMID25501949\n(Mutations)",
-                              PMID26771497="PMID26771497\n(Essnetiality)"),
-           Highlight = ifelse(SigOf == Generic, "yes", "no"),
-           Class = recode(Class, `BCL2 family` = "BCL2"),
-           Class = factor(Class, c(sort(unique(Class))[-1], "")))
+y <- bind_rows(x, hmp, .id = "Category") %>%
+    mutate(
+        nlogp = -log10(pval),
+        Label = ifelse(
+            (pval < 0.05) | (Category == 2),
+            str_sub(as.character(round(pval, 3)), 2),
+            ""
+        ),
+        Name = ifelse(
+            is.na(Of),
+            Signature,
+            str_c(Signature, "\n(", Of, ")")
+        ),
+        Highlight = ifelse(Of == Generic, "yes", "no"),
+        Class = recode(Class, `BCL2 family` = "BCL2"),
+        Class = factor(Class, c(sort(unique(Class))[-1], ""))
+    )
 
 ## Short-hand for bold element_text of desired size
-etxt <- function(s, ...) {element_text( size = s, face = "bold", ... )}
+etxt <- function(s, ...) {
+    ggplot2::element_text(size = s, face = "bold", ...)
+}
 
 ## Plot all-by-all hits
 pal <- c("#F7F7F7", rev(RColorBrewer::brewer.pal(n=7, name="RdBu"))[4:7])
