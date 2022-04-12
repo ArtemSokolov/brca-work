@@ -1,5 +1,5 @@
 dl <- synExtra::synDownloader("data")
-dl("syn26486688", "syn26541985", "syn26560911", "syn26560927")
+dl("syn26486688", "syn26541985", "syn26560911", "syn26560927", "syn26486674")
 
 dl_auc <- synExtra::synDownloader("data/aucs")
 dl_auc("syn27221487", "syn27221488", "syn27221489")
