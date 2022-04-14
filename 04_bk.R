@@ -109,13 +109,27 @@ ggBKSD <- plotModels(MRNA, Intercept, SD, vh) + ylab("Standard Deviation")
 ggplot2::ggsave("plots/Suppl-BKSD.png", ggBKSD, width = 6, height = 4)
 
 ## Supplement -- RNA vs Mass Spec space
+MMS <- M %>% filter(Modality=="MS")
 Mvs <- select(M, Modality, Drug, Generic, Intercept, Class) %>%
     pivot_wider(names_from = "Modality", values_from = "Intercept")
+
+## Compute r-squared for each panel
+rsq_ms <- with(MMS, cor(Intercept, `F-statistic`)^2) %>% round(3) %>%
+    str_c("~italic(r)^2 == ", ., "")
 rsq_vs <- with(Mvs, cor(RNA, MS)^2) %>% round(3) %>% 
     str_c("~italic(r)^2 == ", ., "")
 
-ggvs <- plotModels(Mvs, RNA, MS, c()) +
+## Plot individual panels
+ggms <- plotModels(MMS, `F-statistic`, Intercept, vh) +
+    ylab("Intercept (Mass Spec)") +
+    annotate("text", 1.25, 0.5, hjust = 0, vjust = 1,
+        label = rsq_ms, parse = TRUE)
+ggvs <- plotModels(Mvs, RNA, MS, vh) + guides(color = "none") +
     xlab("Intercept (RNAseq)") + ylab("Intercept (Mass Spec)") +
     annotate("text", 0.7, 0.5, hjust = 0, vjust = 1,
         label = rsq_vs, parse = TRUE)
-ggplot2::ggsave("plots/Suppl-BK-RNA-v-MS.png", ggvs, width = 6, height = 4)
+
+## Assemble into a single figure
+fms <- cowplot::plot_grid(ggvs, ggms, ncol = 2, labels = c("a", "b"),
+            rel_widths = c(0.75, 1), label_size = 20)
+ggplot2::ggsave("plots/Suppl-BK-RNA-v-MS.png", fms, width = 10, height = 4)
