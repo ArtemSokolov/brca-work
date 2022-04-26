@@ -1,10 +1,18 @@
 library(tidyverse)
 
-vAll <- scan("data/all-genes.txt", what=character())
+lit <- read_csv("data/pmids_for_drugs_tidy.csv", col_types = cols()) %>%
+    mutate(PMID = str_c("PMID:", PMID))
 
-GS <- list.files("input", pattern="*.txt", full.names=TRUE) %>%
-    set_names() %>% map(scan, what=character())
+# Count the number of unique drugs mentioned in each PMID
+unq_cnt <- group_by(lit, PMID) %>%
+    summarize(nDrug = length(unique(Drug)), .groups = "drop")
 
-map(GS, ~.x[duplicated(.x)])
-map(GS, setdiff, vAll)
+# Top 50 papers for each drug
+res <- inner_join(lit, unq_cnt, by = "PMID") %>%
+    select(Drug, PMID, nDrug, Evidence, Year, nCite) %>%
+    group_by(Drug) %>%
+    arrange(nDrug, desc(Evidence), desc(Year), desc(nCite)) %>%
+    slice_head(n = 50) %>%
+    ungroup()
 
+write_csv(res, "output/lit-cand.csv")
