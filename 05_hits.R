@@ -87,7 +87,8 @@ y <- bind_rows(x, hmp, .id = "Category") %>%
             `DNA damage` = "DNA dmg"
             ),
         Class = factor(Class, c(sort(unique(Class))[-1], ""))
-    )
+    ) %>% 
+    filter(Signature != "core250")
 
 ## Short-hand for bold element_text of desired size
 etxt <- function(s, ...) {
@@ -117,4 +118,7 @@ gg <- ggplot(y, aes(y = Signature, x = Generic, fill = nlogp)) +
           strip.text.y = element_blank(),
           strip.text.x = etxt(12),
           strip.background = element_blank())
-ggsave("plots/05-hits.png", gg, width = 17, height = 9)
+
+# Save the figure
+pfx <- str_c("plots/Figure-Lit-", Sys.Date())
+ggsave(str_c(pfx, ".png"), gg, width = 17, height = 9)
