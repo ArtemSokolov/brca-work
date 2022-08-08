@@ -1,37 +1,39 @@
 library(tidyverse)
 
-M <- read_csv('data/agents-metadata.csv', col_types=cols()) %>%
-    select(Drug = agent, Class = drug_class )
+#M <- read_csv('data/agents_metadata.csv', col_types=cols()) %>%
+#    select(Drug = agent, Class = drug_class )
+#
+#PMID <- jsonlite::read_json('data/pmids_for_drugs.json') %>%
+#    keep(~length(.x) > 0) %>%
+#    modify_depth(2, modify_if, is.null, ~as.integer(NA)) %>%
+#    modify_depth(2, as_tibble) %>%
+#    map(enframe, "PMID") %>% map(unnest, value) %>%
+#    enframe("Drug") %>% unnest(value) %>%
+#    select(Drug, PMID, Year=year, nCite = citation_count,
+#           PubChem = pubchem_support, MeSH = mesh_support,
+#           Grounding = grounding_support) %>%
+#    mutate(Evidence = PubChem + MeSH + Grounding) %>%
+#    left_join(M, by="Drug")
+#
+#write_csv(PMID, 'data/pmids_for_drugs_tidy.csv')
 
-PMID <- jsonlite::read_json('data/pmids_for_drugs.json') %>%
-    keep(~length(.x) > 0) %>%
-    modify_depth(2, modify_if, is.null, ~as.integer(NA)) %>%
-    modify_depth(2, as_tibble) %>%
-    map(enframe, "PMID") %>% map(unnest, value) %>%
-    enframe("Drug") %>% unnest(value) %>%
-    select(Drug, PMID, Year=year, nCite = citation_count,
-           PubChem = pubchem_support, MeSH = mesh_support,
-           Grounding = grounding_support) %>%
-    mutate(Evidence = PubChem + MeSH + Grounding) %>%
-    left_join(M, by="Drug")
-
-##write_csv(PMID, 'data/pmids_for_drugs_tidy.csv')
+PMID <- read_csv("data/pmids_for_drugs_tidy.csv")
 
 plotCounts <- function(.df, nThresh=100) {
     X <- .df %>% group_by(Drug) %>%
         summarize(nPMID = length(PMID),
                   Class = unique(Class)) %>%
         arrange(Class, desc(nPMID)) %>%
-        mutate(Drug = factor(Drug,Drug),
+        mutate(Drug = factor(Drug, Drug),
                lbl = ifelse(nPMID >= nThresh, as.character(nPMID), ""),
                lbl = str_c(lbl, "  "),
-               nPMID = pmin(nPMID,nThresh))
+               nPMID = pmin(nPMID, nThresh))
 
     pal <- c("white", ggthemes::few_pal()(8), "darkgray") %>%
         set_names(unique(PMID$Class))
-    ggplot(X, aes(x=Drug, y=nPMID)) +
+    ggplot(X, aes(x = Drug, y = nPMID)) +
         theme_minimal() +
-        geom_bar(stat='identity', color='gray', aes(fill=Class)) +
+        geom_bar(stat = "identity", color = "gray", aes(fill = Class)) +
         geom_text(aes(label=lbl), angle=90, size=3, hjust=1) +
         scale_y_continuous(breaks=seq(0,100,by=25),
                            labels=c("0","25","50","75","100+"),
@@ -42,10 +44,11 @@ plotCounts <- function(.df, nThresh=100) {
               axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 }
 
-PMID %>% plotCounts() %>%
-    ggsave("plots/01-pmid-count.png", ., width=10, height=4)
-PMID %>% filter(Evidence == 3) %>% plotCounts(50) %>%
-    ggsave("plots/01-pmid-count3.png", ., width=5, height=4)
+plotCounts(PMID) %>%
+    ggplot2::ggsave("plots/01-pmid-count.png", ., width = 10, height = 4)
+filter(PMID, Evidence == 3) %>%
+    plotCounts(50) %>%
+    ggplot2::ggsave("plots/01-pmid-count3.png", ., width = 5, height = 4)
 
 plotCitations <- function() {
     X <- PMID %>% filter(!is.na(nCite)) %>%
@@ -57,7 +60,7 @@ plotCitations <- function() {
         theme_minimal() + geom_point() +
         ggrepel::geom_text_repel(aes(label=Label), nudge_y=50) +
         ylab("Number of citations")
-    ggsave("plots/01-cite-count.png", gg1, width=8, height=6)
+    ggplot2::ggsave("plots/01-cite-count.png", gg1, width=8, height=6)
 
     nTop <- c("2021"=0, "2020"=1, "2019"=1, "2018"=3, "2017"=3, "2016"=5,
               "2015"=2, "2014"=3, "2014"=3, "2013"=3, "2012"=6, "2011"=2, "2010"=3)
@@ -81,8 +84,7 @@ plotCitations <- function() {
         theme(panel.grid.major.y = element_blank(),
               panel.grid.minor.y = element_blank())
 
-    ggsave("plots/01-cite-count-2010+.png", gg2, width=8, height=6)    
+    ggplot2::ggsave("plots/01-cite-count-2010+.png", gg2, width=8, height=6)    
 }
 
 plotCitations()
-
