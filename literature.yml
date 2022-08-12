@@ -1,3 +1,19 @@
+PMID22617229:
+  drug: dasatinib
+  cell-lines: BT-20, BT-549, MDA-MB-468, MDA-MB-231, MCF7, HCC1937
+  type: Baseline
+  modality: Mass Spec
+  resource: Table 2
+  signature:
+  - ITGB4
+  - BAIAP2
+  - GPCR5A
+  - ITPR3
+  - TNKS1BP1
+  - ARHGEF18
+  - IASPP
+  - APG16L
+  - TPD52L2
 PMID27450721:
   drug: bleomycin
   type: Prior-based
