@@ -1,3 +1,88 @@
+PMID27450721:
+  drug: bleomycin
+  type: Prior-based
+  modality: Radioresistance
+  resource: Table S1
+  signature:
+  - ABCC4
+  - ABCG2
+  - AKT1
+  - APEX1
+  - ATM
+  - ATR
+  - AURKA
+  - BABAM1
+  - BAX
+  - BBC3
+  - BCL2
+  - BCL2L1
+  - BCL2L12
+  - BECN1
+  - BIRC5
+  - BNIP3
+  - BRCA1
+  - CDK5RAP3
+  - CDKN1A
+  - CHEK1
+  - CHEK2
+  - CLU
+  - DCLRE1C
+  - DDB2
+  - EGFR
+  - EIF2AK3
+  - ERCC1
+  - ERCC4
+  - ERCC6
+  - ERP29
+  - FANCD2
+  - FANCG
+  - GAGE7
+  - GCLM
+  - HIF1A
+  - HLTF
+  - HSPB1
+  - HUWE1
+  - ICAM3
+  - INPP4B
+  - ITGB1
+  - KEAP1
+  - MADD
+  - MCL1
+  - MDC1
+  - MGMT
+  - MIR21
+  - MIR31
+  - MRE11A
+  - MVP
+  - NFE2L2
+  - NFKB1
+  - NOL3
+  - POLH
+  - PRKDC
+  - RAD18
+  - RAD51
+  - RAD52
+  - RAD54L
+  - RALBP1
+  - REG4
+  - RNF168
+  - RNF8
+  - STAT3
+  - TIGAR
+  - TIP1
+  - TLK1
+  - TP53
+  - TP53BP1
+  - TRIM29
+  - TWIST1
+  - UVRAG
+  - XIAP
+  - XPA
+  - XRCC4
+  - XRCC5
+  - XRCC6
+  - XRCC8
+  - YBX1
 PMID15318941:
   drug: docetaxel
   cell-lines: MCF-7, MDA-MB-231
@@ -577,7 +662,7 @@ PMID27378269:
   drug: tamoxifen
   cell-lines: 7 cell lines
   type: Post-perturbation
-  modality: Mutations / CNV
+  modality: CNA / Mutations
   resource: Additional File 8
   signature:
   - TEX38
@@ -618,7 +703,7 @@ PMID27604488:
   drug: alpelisib
   cell-lines: T47D
   type: Baseline
-  modality: Gene Expression
+  modality: RNAseq
   resource: Table S1
   signature:
   - NRG1
