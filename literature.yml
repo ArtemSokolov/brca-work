@@ -4,6 +4,7 @@ PMID30867218:
   type: Post-perturbation
   modality: RNAseq
   resource: Suppl. Table 3
+  filter: abs(logFC) > 2, padj < 0.01
   signature:
   - PKIA
   - PMP22
