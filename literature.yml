@@ -1,3 +1,28 @@
+PMID32286420:
+  drug: everolimus
+  cell-lines: CAL-51
+  type: Post-perturbation
+  modality: Taqman low density arrays
+  resource: Figure 4
+  signature:
+  - CCNB1
+  - CHEK1
+  - CCNE1
+  - CHEK2
+  - FOS
+  - PARP2
+  - ABCB1
+  - MAPK3
+  - E2F1
+  - ERBB3
+  - CDK2
+  - CDKN1A
+  - BRCA1
+  - CCNA1
+  - CDK4
+  - CASP3
+  - ABCG2
+  - RAPR1
 PMID16288014:
   drug: etoposide
   cell-lines: HCC1937, T47D
