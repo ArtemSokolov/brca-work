@@ -250,7 +250,7 @@ PMID22500798:
   drug: AZD6244
   cell-lines: MDA-MB-231, SUM159
   type: Post-perturbation
-  modality: MS Kinome Response
+  modality: Phospho Mass Spec
   resource: Table S6
   signature:
   - AAK1
@@ -345,7 +345,7 @@ PMID25865888:
   cell-lines: SKBR-3, BT474, HCC1419, HCC1954, MDA361
   type: Post-perturbation
   modality: Kinase / RNAseq
-  resource: Table S1 (Signif. in at least two cell lines)
+  resource: Suppl. Table 1
   signature:
   - PRKAA1
   - ABL1
@@ -974,10 +974,10 @@ PMID30305055:
   - TNFRSF25
   - TNFSF10
 PMID30914635:
-  drug: fulvestrant+ribociclib
+  drug: ribociclib
   cell-lines: MCF-7
   type: Baseline
-  modality: Kinase ORFs
+  modality: ORF kinome screen
   resource: Figure 1
   signature:
   - RAF1
