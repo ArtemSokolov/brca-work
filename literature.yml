@@ -1,3 +1,25 @@
+PMID28249908:
+  drug: ribociclib
+  cell-lines: MCF-7
+  type: Baseline
+  modality: siRNA
+  resource: Table 1
+  signature:
+  - PDK1
+  - DLG1
+  - DCAMKL1
+  - CDKN1B
+  - DYRK1A
+  - HUNK
+  - ILK
+  - YES1
+  - CRKL
+  - TLK1
+  - KCNH8
+  - EPHA4
+  - EPHB1
+  - RELA
+  - ICK
 PMID20423993:
   drug: dasatinib
   cell-lines: 23 cell lines
