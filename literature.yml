@@ -1,6 +1,56 @@
+PMID33665980:
+  type: Prior-based
+  modality: PCR
+  resource: Methods
+  signature:
+  - ACVR1B
+  - CDH1
+  - EXOC2
+  - ITCH
+  - NCOR1
+  - PTEN
+  - WEE1
+  - AKT1
+  - CDKN2A
+  - EXT2
+  - KMT2C
+  - NEK2
+  - PTGFR
+  - ZBED4
+  - ATM
+  - EGFR
+  - FBXO32
+  - MAP2K4
+  - PBRM1
+  - RB1
+  - BAP1
+  - EP300
+  - FGFR1
+  - MAP3K1
+  - PCGF2
+  - RET
+  - BRCA1
+  - ERBB2
+  - FGFR2
+  - MDM2
+  - PIK3CA
+  - SEPT9
+  - BRCA2
+  - ERBB3
+  - GATA3
+  - MUC16
+  - PIK3R1
+  - TP53
+  - CBFB
+  - ESR1
+  - IRAK4
+  - MYC
+  - PPM1L
+  - TRAF5  
 PMID27048245:
   drug: alpelisib
   cell-lines: MCF-7, T47D
+  type: Post-perturbation
   modality: Mass Spec
   resource: Add. files 2/3
   filter: abs(logFC) > 2
@@ -826,8 +876,6 @@ PMID22500798:
   - TTK
   - AXL
 PMID25501949:
-  drug: 90 drugs
-  cell-lines: MCF10A
   type: Prior-based
   modality: Mutations
   resource: Table S1
