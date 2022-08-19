@@ -5,6 +5,7 @@ RUN R -e 'install.packages("synapser", repos=c("http://ran.synapse.org", "http:/
 RUN R -e 'remotes::install_github("ArtemSokolov/synExtra")'
 
 RUN R -e 'install.packages(c("ggrepel", "cowplot", "ggthemes"))'
+RUN R -e 'install.packages("openxlsx")'
 
 ### Gitpod user ###
 # '-l': see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
