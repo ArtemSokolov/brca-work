@@ -1,3 +1,29 @@
+PMID27048245:
+  drug: alpelisib
+  cell-lines: MCF-7, T47D
+  modality: Mass Spec
+  resource: Add. files 2/3
+  filter: abs(logFC) > 2
+  signature:
+  - ANKS1A
+  - BCAR1
+  - CTTN
+  - EEF1A2
+  - EPHA1
+  - FAM83F
+  - FGB
+  - G6PD
+  - GPRC5C
+  - HIST1H4A
+  - HSP90AA1
+  - MAPK13
+  - MDH2
+  - MYO1D
+  - PIK3R1
+  - PLEKHA6
+  - PTK2
+  - SRCIN1
+  - TJP2  
 PMID32286420:
   drug: everolimus
   cell-lines: CAL-51
