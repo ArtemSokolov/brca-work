@@ -1,3 +1,34 @@
+PMID27050525:
+  drug: pictilisib
+  cell-lines: MDA-MB-436
+  type: Baseline
+  modality: qRT-PCR
+  resource: Figure 4
+  signature:
+  - ESRRA
+  - GLUT1
+  - HK2
+  - PDK1
+  - PDHA1
+  - CS
+  - ACO2
+  - IDH3A
+  - OGDH
+  - SUCLG1
+  - SDH
+  - FH
+  - MDH1
+  - MDH2
+  - COX5A
+  - ATP5G1
+  - CYCS
+  - NDUFS3
+  - NDUFA6
+  - UQCRFS1
+  - LDHA
+  - LDHB
+  - MCT1
+  - MCT4
 PMID33042272:
   drug: paclitaxel
   cell-lines: MDA-MB-231
