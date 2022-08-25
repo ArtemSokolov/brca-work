@@ -1,3 +1,38 @@
+PMID26801902:
+  drug: cisplatin
+  cell-lines: MCF-7, MDA-MB-231
+  type: Post-perturbation
+  modality: Gene Expr. Microarray
+  resource: Add. file 2
+  signature:
+  - ANPEP
+  - AOX1
+  - AREG
+  - ANXA1
+  - ABCG2
+  - BASP1
+  - CA12
+  - CTSH
+  - CDKN1A
+  - CST6
+  - CSRP1
+  - DUSP4
+  - INHBB
+  - ID3
+  - KLHL4
+  - MARCKSL1
+  - MAGED1
+  - NTN4
+  - PHGDH
+  - RBM24
+  - SH3BGRL
+  - SOCS2
+  - TIMP3
+  - TFPI2
+  - TM4SF1
+  - TMED3
+  - TMEM30A
+  - TRIM16
 PMID31462705:
   drug: THZ1
   cell-lines: SBKR3, BT474
