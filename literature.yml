@@ -1,3 +1,23 @@
+PMID31462705:
+  drug: THZ1
+  cell-lines: SBKR3, BT474
+  type: Post-perturbation
+  modality: RNAseq
+  resource: Suppl. Table 1
+  filter: abs(logFC) > 2, padj < 0.05
+  signature:
+  - AXUD1
+  - RAB40C
+  - TRIB3
+  - SURF6
+  - PPRC1
+  - IRX3
+  - TMEM60
+  - C19orf48
+  - NCOA6
+  - RNMTL1
+  - SPATA2L
+  - ZNF586
 PMID28396358:
   drug: buparlisib
   cell-lines: Mouse allografts
@@ -1927,11 +1947,9 @@ PMID25865888:
   - WEE1
   - YES1
 PMID26771497:
-  drug: 90 drugs
-  cell-lines: 78 BRCA cell lines
   type: Prior-based
   modality: Gene Essentiality
-  resource: Table S2A
+  resource: Suppl. Table 2A
   signature:
   - RPL23
   - RPS13
