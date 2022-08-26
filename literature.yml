@@ -1,3 +1,62 @@
+PMID28108460:
+  drug: trametinib
+  cell-lines: patients
+  type: Post-perturbation
+  modality: RNAseq
+  resource: Figure 1C
+  signature:
+  - FRK
+  - BMPR1B
+  - EGFR
+  - PRKG2
+  - ERBB2
+  - DDR1
+  - SGK196
+  - BUB1
+  - CDC42BPG
+  - CDKL5
+  - CDK19
+  - MELK
+  - MAP3K9
+  - SRPK1
+  - CHEK1
+  - HK2
+  - PRKCI
+  - CASK
+  - YES1
+  - MAP4K3
+  - FLT1
+  - MAP3K12
+  - CLK1
+  - PIP4K2A
+  - CAMK1
+  - MAPK11
+  - MLKL
+  - PIK3CG
+  - PRKACB
+  - TGFBR2
+  - CSF1R
+  - ACVRL1
+  - MAP4K1
+  - FLT4
+  - BTK
+  - STK32B
+  - RIPK3
+  - PDK4
+  - TEK
+  - JAK3
+  - EPHA7
+  - EPHA3
+  - PRKCB
+  - TIE1
+  - FGR
+  - LCK
+  - LTK
+  - ITK
+  - ZAP70
+  - TXK
+  - BLK
+  - BMX
 PMID26801902:
   drug: cisplatin
   cell-lines: MCF-7, MDA-MB-231
