@@ -1347,7 +1347,6 @@ PMID16288014:
   - SCD4
   - SCEL
   - SDC1
-  - SDC1
   - CD138
   - SYND1
   - SDCCAG8
@@ -1392,7 +1391,6 @@ PMID30867218:
   signature:
   - PKIA
   - PMP22
-  - MAGEA3/MAGEA6
   - MAGEA12
   - ANGPT1
   - CSAG1
@@ -2499,7 +2497,6 @@ PMID27378269:
   - TMPRSS13
   - EP400
   - PTPRN2
-  - TIMM23
   - TNS1
   - MAP2
   - PTH2R
@@ -2607,11 +2604,10 @@ PMID30305055:
   drug: lapatinib
   cell-lines: SKBR3
   type: Post-perturbation
-  modality: Microarray
+  modality: Gene Expr. Microarray
   resource: Suppl. Table 1
   signature:
   - APAF1
-  - BCL2L1
   - BID
   - BAX
   - BBC3
