@@ -1,3 +1,34 @@
+PMID25897982:
+  drug: vorinostat
+  cell-lines: patients
+  type: Baseline
+  modality: qPCR
+  resource: Figure 8
+  signature:
+  - GCLC
+  - GGT1
+  - GSTA4
+  - GPX8
+  - GGT3P
+  - SLC7A8
+  - GCLM
+  - GSTA2
+  - GSTA1
+  - GSTA5
+  - TXNIP
+  - PRODH
+  - GSR
+  - GGT7
+  - HGD
+  - GSTM4
+  - GSTM5
+  - SLC25A43
+  - GPX3
+  - PGR
+  - PRNP
+  - GSS
+  - GSTT2
+  - GSTM1
 PMID28108460:
   drug: trametinib
   cell-lines: patients
