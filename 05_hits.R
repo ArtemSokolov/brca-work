@@ -3,7 +3,8 @@ library(tidyverse)
 ## Background models for RNAseq performance
 bk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
   filter(Modality == "RNA") %>%
-  select(-Modality)
+  select(-Modality, -Drug) %>%
+  rename(Drug = Generic)
 
 ## Load metadata
 meta <- yaml::read_yaml("literature.yml") %>%
@@ -15,7 +16,8 @@ meta <- yaml::read_yaml("literature.yml") %>%
     across(drug, recode, `hormonal therapy` = "hormonal"),
     across(modality, recode, `Gene Essentiality` = "Essentiality")
   ) %>%
-  select(PMID, drug, type, modality, size)
+  select(Signature = PMID, Of = drug, Type = type,
+    Modality = modality, Size = size)
 
 ## Exclude some of the experimental drugs to improve interpretability
 dexcl <- c(
@@ -33,15 +35,15 @@ dexcl <- c(
 
 ## Load AUC values, match up against metadata and background models
 ## Compute p values associated with each AUC measure
-x <- read_csv("data/aucs/rnasig-aucs.csv", col_types = cols()) %>%
-    inner_join(bk, by = "Drug") %>%
+auc <- read_csv("data/aucs/lit-gene.csv", col_types = cols())
+x <- inner_join(auc, bk, by = "Drug") %>%
     inner_join(meta, by = "Signature") %>%
     mutate(
         AUCe = Size * Slope + Intercept,
         pval  = pmap_dbl(list(AUC, AUCe, SD), pnorm, lower.tail = FALSE)
     ) %>%
-    select(Type, Signature, Of, Generic, Class, AUC, pval, `F-statistic`) %>%
-    filter(!(Generic %in% dexcl))
+    select(Type, Signature, Of, Modality,
+      Drug, Class, AUC, pval, `F-statistic`)
 
 ## Harmonic mean to aggregate p values for a single per-signature metric
 hmean <- function(x) {
