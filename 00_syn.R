@@ -10,5 +10,5 @@ dl_auc(
     "syn27221487",  # msbg-aucs.csv
     "syn27221488",  # rnabg-aucs.csv
     "syn36333980",  # lit-gene.csv
-    "syn36424262",  # lit-protein.csv
+    "syn36424262"   # lit-protein.csv
 )

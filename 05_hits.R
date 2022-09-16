@@ -1,32 +1,21 @@
 library(tidyverse)
 
-## Metadata for additional universal signatures
-meta_univ <- tibble(
-    Signature = c("core250", "pam50"),
-    Size      = c(250, 50),
-    Type      = "Universal"
-)
-
-## Combine with the metadata for publishes signatures
-meta <- read_tsv("data/lit-meta.tsv",
-        col_types = cols(PMID = col_character())
-    ) %>%
-    mutate(
-        Signature = str_c("PMID", PMID),
-        across(Drug, recode,
-            `fulvestrant+ribociclib` = "ribociclib",
-            `hormonal therapy` = "hormonal"),
-        Type = ifelse(Type != "Universal", "Experimental", "Universal"),
-        Of = ifelse(Type == "Universal", Modality, Drug),
-        across(Of, recode, `Gene Essentiality` = "Essentiality")
-    ) %>%
-    select(Signature, Of, Type, Size) %>%
-    bind_rows(meta_univ)
-
 ## Background models for RNAseq performance
 bk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
-    filter(Modality == "RNA") %>%
-    select(-Modality)
+  filter(Modality == "RNA") %>%
+  select(-Modality)
+
+## Load metadata
+meta <- yaml::read_yaml("literature.yml") %>%
+  map(modify_at, "signature", list) %>%
+  map(~tibble(!!!.x)) %>%
+  bind_rows(.id = "PMID") %>%
+  mutate(
+    size = map_int(signature, length),
+    across(drug, recode, `hormonal therapy` = "hormonal"),
+    across(modality, recode, `Gene Essentiality` = "Essentiality")
+  ) %>%
+  select(PMID, drug, type, modality, size)
 
 ## Exclude some of the experimental drugs to improve interpretability
 dexcl <- c(
