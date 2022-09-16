@@ -14,7 +14,9 @@ meta <- yaml::read_yaml("literature.yml") %>%
   mutate(
     size = map_int(signature, length),
     across(drug, recode, `hormonal therapy` = "hormonal"),
-    across(modality, recode, `Gene Essentiality` = "Essentiality")
+    across(modality, recode,
+      `Gene Essentiality` = "Essentiality",
+      PCR = "Targeted PCR")
   ) %>%
   select(Signature = PMID, Of = drug, Type = type,
     Modality = modality, Size = size)
@@ -43,7 +45,8 @@ x <- inner_join(auc, bk, by = "Drug") %>%
         pval  = pmap_dbl(list(AUC, AUCe, SD), pnorm, lower.tail = FALSE)
     ) %>%
     select(Type, Signature, Of, Modality,
-      Drug, Class, AUC, pval, `F-statistic`)
+      Drug, Class, AUC, pval, `F-statistic`) %>%
+    filter(Drug %in% Of)
 
 ## Harmonic mean to aggregate p values for a single per-signature metric
 hmean <- function(x) {
@@ -53,7 +56,7 @@ hmean <- function(x) {
 hmp <- group_by(x, Signature, Of, Type) %>%
     summarize(across(pval, hmean), .groups = "drop") %>%
     mutate(
-        Generic = "Harmonic\nmean p-val",
+        Drug = "Harmonic\nmean p-val",
         Class = ""
     )
 
@@ -71,15 +74,14 @@ y <- bind_rows(x, hmp, .id = "Category") %>%
             Signature,
             str_c(Signature, "\n(", Of, ")")
         ),
-        Highlight = ifelse(Of == Generic, "yes", "no"),
+        Highlight = ifelse(Of == Drug, "yes", "no"),
         Class = recode(
             Class,
             `BCL2 family` = "BCL2",
             `DNA damage` = "DNA dmg"
-            ),
-        Class = factor(Class, c(sort(unique(Class))[-1], ""))
-    ) %>% 
-    filter(Signature != "core250")
+            )
+##        Class = factor(Class, c(sort(unique(Class))[-1], ""))
+    )
 
 ## Short-hand for bold element_text of desired size
 etxt <- function(s, ...) {
