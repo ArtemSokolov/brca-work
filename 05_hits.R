@@ -72,15 +72,15 @@ y <- bind_rows(x, hmp, .id = "Category") %>%
         Signature = ifelse(
             is.na(Of),
             Signature,
-            str_c(Signature, "\n(", Of, ")")
+            str_c(Signature, " (", Of, ")")
         ),
         Highlight = ifelse(Of == Drug, "yes", "no"),
         Class = recode(
             Class,
             `BCL2 family` = "BCL2",
             `DNA damage` = "DNA dmg"
-            )
-##        Class = factor(Class, c(sort(unique(Class))[-1], ""))
+            ),
+        Class = factor(Class, c(sort(unique(Class))[-1], ""))
     )
 
 ## Short-hand for bold element_text of desired size
@@ -91,13 +91,13 @@ etxt <- function(s, ...) {
 ## Plot all-by-all hits
 pal <- c("#F7F7F7", rev(RColorBrewer::brewer.pal(n = 7, name = "RdBu"))[4:7])
 vs <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0005)
-gg <- ggplot(y, aes(y = Signature, x = Generic, fill = nlogp)) +
+gg <- ggplot(y, aes(y = Signature, x = Drug, fill = nlogp)) +
     theme_bw() + geom_tile() +
     geom_tile(
         data = filter(y, Highlight == "yes"),
         color = "black", size = 1
     ) +
-    geom_text(aes(label = Label), color = "black", angle = 90) +
+    geom_text(aes(label = Label), color = "black", angle = 0) +
     scale_fill_gradientn(
         name = "p-value", colors = pal, limits = c(0, 3.1),
         labels = vs, breaks = -log10(vs)
@@ -106,12 +106,14 @@ gg <- ggplot(y, aes(y = Signature, x = Generic, fill = nlogp)) +
     facet_grid(Type~Class, space = "free", scales = "free") +
     theme(axis.text.x  = etxt(12, angle = 90, hjust = 1, vjust = 0.5),
           axis.text.y  = etxt(12), axis.title = etxt(14),
-          legend.text = etxt(12), legend.title = etxt(14),
-          legend.key.height = unit(3, "line"),
-          strip.text.y = element_blank(),
+          legend.text = etxt(12, angle = 90, hjust = 1),
+          legend.title = etxt(14),
+          legend.key.width = unit(3, "line"),
+          legend.position = "bottom",
+          strip.text.y = etxt(12),
           strip.text.x = etxt(12),
           strip.background = element_blank())
 
 # Save the figure
 pfx <- str_c("plots/Figure-Lit-", Sys.Date())
-ggsave(str_c(pfx, ".png"), gg, width = 17, height = 9)
+ggsave(str_c(pfx, ".png"), gg, width = 15, height = 12)
