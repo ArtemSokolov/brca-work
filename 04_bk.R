@@ -107,6 +107,7 @@ str_c(pfx, ".pdf") %>% ggsave(ff, width = 10, height = 6)
 ## Supplement -- intercept vs. standard deviation
 ggBKSD <- plotModels(MRNA, Intercept, SD, vh) + ylab("Standard Deviation")
 ggplot2::ggsave("plots/Suppl-BKSD.png", ggBKSD, width = 6, height = 4)
+ggplot2::ggsave("plots/Suppl-BKSD.pdf", ggBKSD, width = 6, height = 4)
 
 ## Supplement -- RNA vs Mass Spec space
 MMS <- M %>% filter(Modality=="MS")
@@ -133,3 +134,4 @@ ggvs <- plotModels(Mvs, RNA, MS, vh) + guides(color = "none") +
 fms <- cowplot::plot_grid(ggvs, ggms, ncol = 2, labels = c("a", "b"),
             rel_widths = c(0.75, 1), label_size = 20)
 ggplot2::ggsave("plots/Suppl-BK-RNA-v-MS.png", fms, width = 10, height = 4)
+ggplot2::ggsave("plots/Suppl-BK-RNA-v-MS.pdf", fms, width = 10, height = 4)
