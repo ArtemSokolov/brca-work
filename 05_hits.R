@@ -1,10 +1,17 @@
 library(tidyverse)
 
+## Harmonic mean to aggregate p values for a single per-signature metric
+hmean <- function(x) {
+    length(x) / sum(1 / x)
+}
+
+split2 <- function(.df, .col) {
+    split(.df, .df[[.col]]) |> purrr::map(dplyr::select, -dplyr::all_of(.col))
+}
+
 ## Background models for RNAseq performance
-bk <- read_csv("output/BK-models.csv", col_types = cols()) %>%
-  filter(Modality == "RNA") %>%
-  select(-Modality, -Drug) %>%
-  rename(Drug = Generic)
+bk <- read_csv("output/BK-models.csv", col_types = cols()) |>
+  select(-Drug) |> rename(Drug = Generic) |> split2("Modality")
 
 ## Load metadata
 meta <- yaml::read_yaml("literature.yml") %>%
@@ -21,24 +28,10 @@ meta <- yaml::read_yaml("literature.yml") %>%
   select(Signature = PMID, Of = drug, Type = type,
     Modality = modality, Size = size)
 
-## Exclude some of the experimental drugs to improve interpretability
-dexcl <- c(
-    "BSJ-01-175",
-    "BSJ-03-124",
-    "E17",
-    "FMF-03-145-1",
-    "FMF-03-146-1",
-    "FMF-04-107-2",
-    "FMF-04-112-1",
-    "THZ-P1-2",
-    "THZ-P1-2R",
-    "ZZ1-33B"
-)
-
 ## Load AUC values, match up against metadata and background models
 ## Compute p values associated with each AUC measure
 auc <- read_csv("data/aucs/lit-gene.csv", col_types = cols())
-x <- inner_join(auc, bk, by = "Drug") %>%
+x <- inner_join(auc, bk$RNA, by = "Drug") %>%
     inner_join(meta, by = "Signature") %>%
     mutate(
         AUCe = Size * Slope + Intercept,
@@ -47,11 +40,6 @@ x <- inner_join(auc, bk, by = "Drug") %>%
     select(Type, Signature, Of, Modality,
       Drug, Class, AUC, pval, `F-statistic`) %>%
     filter(Drug %in% Of)
-
-## Harmonic mean to aggregate p values for a single per-signature metric
-hmean <- function(x) {
-    length(x) / sum(1 / x)
-}
 
 hmp <- group_by(x, Signature, Of, Type) %>%
     summarize(across(pval, hmean), .groups = "drop") %>%
@@ -117,3 +105,4 @@ gg <- ggplot(y, aes(y = Signature, x = Drug, fill = nlogp)) +
 # Save the figure
 pfx <- str_c("plots/Figure-Lit-", Sys.Date())
 ggsave(str_c(pfx, ".png"), gg, width = 15, height = 12)
+ggsave(str_c(pfx, ".pdf"), gg, width = 15, height = 12)
